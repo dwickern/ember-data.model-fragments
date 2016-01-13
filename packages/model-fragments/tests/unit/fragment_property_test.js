@@ -269,3 +269,94 @@ test("fragment default values can be functions", function() {
     equal(sword.get('name.first'), defaultValue.first, "the default value is correct");
   });
 });
+
+test("destroy a fragment which was set to null", function() {
+  store.push({
+    data: {
+      type: 'person',
+      id: 1,
+      attributes: {
+        name: {
+          first: "Barristan",
+          last: "Selmy"
+        }
+      }
+    }
+  });
+
+  return store.find('person', 1).then(function(person) {
+    let name = person.get('name');
+    person.set('name', null);
+
+    person.destroy();
+
+    Ember.run.schedule('destroy', function() {
+      ok(person.get('isDestroying'), "the model is being destroyed");
+      ok(name.get('isDestroying'), "the fragment is being destroyed");
+    });
+  });
+});
+
+test("destroy the old and new fragment value", function() {
+  store.push({
+    data: {
+      type: 'person',
+      id: 1,
+      attributes: {
+        name: {
+          first: "Barristan",
+          last: "Selmy"
+        }
+      }
+    }
+  });
+
+  return store.find('person', 1).then(function(person) {
+    let oldName = person.get('name');
+    let newName = store.createFragment('name');
+    person.set('name', newName);
+
+    ok(!oldName.get('isDestroying'), "don't destroy the old fragment yet because we could rollback");
+
+    person.destroy();
+
+    Ember.run.schedule('destroy', function() {
+      ok(person.get('isDestroying'), "the model is being destroyed");
+      ok(oldName.get('isDestroying'), "the old fragment is being destroyed");
+      ok(newName.get('isDestroying'), "the new fragment is being destroyed");
+    });
+  });
+});
+
+
+test("destroy intermediate fragment values", function() {
+  store.push({
+    data: {
+      type: 'person',
+      id: 1,
+      attributes: {
+        name: {
+          first: "Barristan",
+          last: "Selmy"
+        }
+      }
+    }
+  });
+
+  return store.find('person', 1).then(function(person) {
+    let name1 = person.get('name');
+    let name2 = person.set('name', store.createFragment('name'));
+    let name3 = person.set('name', store.createFragment('name'));
+    let name4 = person.set('name', store.createFragment('name'));
+
+    person.destroy();
+
+    Ember.run.schedule('destroy', function() {
+      ok(person.get('isDestroying'), "the model is being destroyed");
+      ok(name1.get('isDestroying'), "the first value is being destroyed");
+      ok(name2.get('isDestroying'), "the second value is being destroyed");
+      ok(name3.get('isDestroying'), "the third value is being destroyed");
+      ok(name4.get('isDestroying'), "the fourth value is being destroyed");
+    });
+  });
+});

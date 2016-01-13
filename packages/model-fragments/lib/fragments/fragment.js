@@ -165,6 +165,9 @@ export function internalModelFor(record) {
   if (!internalModel._fragments) {
     internalModel._fragments = create(null);
   }
+  if (!internalModel._owns) {
+    internalModel._owns = [];
+  }
 
   return internalModel;
 }
@@ -177,6 +180,9 @@ export function setFragmentOwner(fragment, record, key) {
 
   internalModel._owner = record;
   internalModel._name = key;
+
+  var ownerInternalModel = internalModelFor(record);
+  ownerInternalModel._owns.push(fragment);
 
   // Notify any observers of `fragmentOwner` properties
   get(fragment.constructor, 'fragmentOwnerProperties').forEach(function(name) {

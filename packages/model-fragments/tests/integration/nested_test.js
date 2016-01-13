@@ -251,3 +251,51 @@ test("Nested fragments can be copied", function() {
     ok(product !== user.get('orders.firstObject.product'), 'nested fragment copies are new fragments');
   });
 });
+
+test("Nested fragments are destroyed when the owner record is destroyed", function() {
+  store.push({
+    data: {
+      type: 'user',
+      id: 1,
+      attributes: {
+        info: {
+          name: 'Tyrion Lannister',
+          notes: [ 'smart', 'short' ]
+        },
+        orders: [
+          {
+            amount: '10999.99',
+            products: [
+              {
+                name  : 'Lives of Four Kings',
+                sku   : 'old-book-32',
+                price : '10999.99'
+              }
+            ]
+          }
+        ]
+      }
+    }
+  });
+
+  return store.find('user', 1).then(function(user) {
+    let info = user.get('info');
+    let notes = info.get('notes');
+    let orders = user.get('orders');
+    let order = orders.get('firstObject');
+    let products = order.get('products');
+    let product = products.get('firstObject');
+
+    user.destroy();
+
+    Ember.run.schedule('destroy', function() {
+      ok(user.get('isDestroying'), "the user is being destroyed");
+      ok(info.get('isDestroying'), "the info is being destroyed");
+      ok(notes.get('isDestroying'), "the notes are being destroyed");
+      ok(orders.get('isDestroying'), "the orders are being destroyed");
+      ok(order.get('isDestroying'), "the order is being destroyed");
+      ok(products.get('isDestroying'), "the products are being destroyed");
+      ok(product.get('isDestroying'), "the product is being destroyed");
+    });
+  });
+});

@@ -151,6 +151,15 @@ Model.reopen({
 
     return diffData;
   },
+
+  willDestroy: function() {
+    this._super.apply(this, arguments);
+
+    var internalModel = internalModelFor(this);
+    internalModel._owns.forEach(function(fragment) {
+      fragment.destroy();
+    });
+  }
 });
 
 // Replace a method on an object with a new one that calls the original and then
