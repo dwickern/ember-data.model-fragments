@@ -536,6 +536,29 @@
 
         return diffData;
       },
+
+      willDestroy: function() {
+        this._super.apply(this, arguments);
+
+        var internalModel = model$fragments$lib$fragments$fragment$$internalModelFor(this);
+        var key, fragment;
+
+        // destroy the current state
+        for (key in internalModel._fragments) {
+          if (fragment = internalModel._fragments[key]) {
+            fragment.destroy();
+          }
+        }
+
+        // destroy the original state
+        for (key in internalModel._data) {
+          if (fragment = internalModel._data[key]) {
+            if (fragment instanceof model$fragments$lib$fragments$fragment$$default || fragment instanceof model$fragments$lib$fragments$array$fragment$$default) {
+              fragment.destroy();
+            }
+          }
+        }
+      }
     });
 
     // Replace a method on an object with a new one that calls the original and then
@@ -1128,6 +1151,20 @@
         var fragment = store.createFragment(type, props);
 
         return this.pushObject(fragment);
+      },
+
+      willDestroy: function() {
+        this._super.apply(this, arguments);
+
+        // destroy the current state
+        this.forEach(function(fragment) {
+          fragment.destroy();
+        });
+
+        // destroy the original state
+        this._originalState.forEach(function(fragment) {
+          fragment.destroy();
+        });
       }
     });
 
